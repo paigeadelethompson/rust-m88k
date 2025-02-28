@@ -1,12 +1,12 @@
 [package]
-name = "rust88"
+name = "rust-m88k"
 version = "0.1.0"
 edition = "2021"
-description = "A Motorola 88000 CPU emulator written in Rust"
-authors = ["Your Name <your.email@example.com>"]
+description = "A Motorola 88000 CPU emulation library written in Rust"
+authors = ["Paige Thompson <paige@paige.bio>"]
 
 [lib]
-name = "rust88"
+name = "motorola88k"
 path = "src/lib.rs"
 
 [dependencies]
