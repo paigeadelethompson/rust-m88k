@@ -35,7 +35,7 @@ jobs:
       
       - name: Add index.html redirect
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=rust88">' > target/doc/index.html
+          echo '<meta http-equiv="refresh" content="0; url=motorola88k">' > target/doc/index.html
       
       - name: Setup Pages
         uses: actions/configure-pages@v4

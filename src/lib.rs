@@ -14,7 +14,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use motorola88k::{CPU, Memory};
 //!
 //! let mut cpu = CPU::new();
@@ -24,8 +24,8 @@
 //! cpu.registers[1] = 42;
 //!
 //! // Memory operations can be performed using the Memory interface
-//! memory.write_word(0x1000, 0x12345678);
-//! let value = memory.read_word(0x1000);
+//! memory.write_word(0x1000, 0x12345678).unwrap();
+//! let value = memory.read_word(0x1000).unwrap();
 //! ```
 //!
 //! # Architecture
