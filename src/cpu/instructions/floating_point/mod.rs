@@ -1,5 +1,5 @@
 //! Floating point instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of all floating point operations including:
 //! - Basic arithmetic (add, subtract, multiply, divide)
 //! - Comparisons
@@ -7,9 +7,9 @@
 //! - Special value handling (NaN, infinity)
 //! - Exception handling
 
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::Memory;
-use crate::cpu::instructions::Instruction;
 
 /// Floating point add instruction: rd = rs1 + rs2
 pub struct FAdd;
@@ -19,7 +19,7 @@ impl Instruction for FAdd {
         let a = f32::from_bits(cpu.registers[cpu.s1]);
         let b = f32::from_bits(cpu.registers[cpu.s2]);
         let result = a + b;
-        
+
         // Check for floating point exceptions
         if result.is_infinite() && !a.is_infinite() && !b.is_infinite() {
             cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW);
@@ -27,7 +27,7 @@ impl Instruction for FAdd {
         if result == 0.0 && (a != 0.0 || b != 0.0) {
             cpu.set_fp_flag(CPU::CR0_FP_UNDERFLOW);
         }
-        
+
         cpu.registers[cpu.d] = result.to_bits();
     }
 }
@@ -40,11 +40,11 @@ impl Instruction for FSub {
         let a = f32::from_bits(cpu.registers[cpu.s1]);
         let b = f32::from_bits(cpu.registers[cpu.s2]);
         let result = a - b;
-        
+
         if result.is_nan() {
             cpu.cr0 |= CPU::CR0_FP_INVALID;
         }
-        
+
         cpu.registers[cpu.d] = result.to_bits();
     }
 }
@@ -57,7 +57,7 @@ impl Instruction for FMul {
         let a = f32::from_bits(cpu.registers[cpu.s1]);
         let b = f32::from_bits(cpu.registers[cpu.s2]);
         let result = a * b;
-        
+
         // Check for floating point exceptions
         if result.is_infinite() && !a.is_infinite() && !b.is_infinite() {
             cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW);
@@ -65,7 +65,7 @@ impl Instruction for FMul {
         if result == 0.0 && a != 0.0 && b != 0.0 {
             cpu.set_fp_flag(CPU::CR0_FP_UNDERFLOW);
         }
-        
+
         cpu.registers[cpu.d] = result.to_bits();
     }
 }
@@ -77,7 +77,7 @@ impl Instruction for FDiv {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = f32::from_bits(cpu.registers[cpu.s1]);
         let b = f32::from_bits(cpu.registers[cpu.s2]);
-        
+
         // Check for division by zero
         if b == 0.0 {
             cpu.set_fp_flag(CPU::CR0_FP_DIVZERO);
@@ -95,9 +95,9 @@ impl Instruction for FDiv {
             }
             return;
         }
-        
+
         let result = a / b;
-        
+
         // Check for floating point exceptions
         if result.is_infinite() && !a.is_infinite() {
             cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW);
@@ -105,7 +105,7 @@ impl Instruction for FDiv {
         if result == 0.0 && a != 0.0 {
             cpu.set_fp_flag(CPU::CR0_FP_UNDERFLOW);
         }
-        
+
         cpu.registers[cpu.d] = result.to_bits();
     }
 }
@@ -117,7 +117,7 @@ impl Instruction for FCmp {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = f32::from_bits(cpu.registers[cpu.s1]);
         let b = f32::from_bits(cpu.registers[cpu.s2]);
-        
+
         cpu.cr0 &= !CPU::CR0_FP_COMPARE_MASK;
         if a.is_nan() || b.is_nan() {
             cpu.cr0 |= CPU::CR0_FP_UNORDERED;
@@ -148,21 +148,21 @@ pub struct FpToInt;
 impl Instruction for FpToInt {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let value = f32::from_bits(cpu.registers[cpu.s1]);
-        
+
         // Check for NaN or infinity
         if value.is_nan() || value.is_infinite() {
             cpu.set_fp_flag(CPU::CR0_FP_INVALID);
             cpu.registers[cpu.d] = 0;
             return;
         }
-        
+
         // Check for overflow
         if value > i32::MAX as f32 || value < i32::MIN as f32 {
             cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW);
             cpu.registers[cpu.d] = if value > 0.0 { i32::MAX } else { i32::MIN } as u32;
             return;
         }
-        
+
         // Round to nearest even integer
         let rounded = value.round();
         // If we're exactly halfway between two integers, round to even
@@ -176,7 +176,7 @@ impl Instruction for FpToInt {
         } else {
             rounded
         };
-        
+
         cpu.registers[cpu.d] = result as i32 as u32;
     }
 }
@@ -218,23 +218,23 @@ mod tests {
     fn test_fsub() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         cpu.s1 = 1;
         cpu.s2 = 2;
         cpu.d = 3;
-        
+
         // Test normal subtraction
         cpu.registers[1] = 3.0f32.to_bits();
         cpu.registers[2] = 1.5f32.to_bits();
         FSub.execute(&mut cpu, &mut memory);
         assert_eq!(f32::from_bits(cpu.registers[3]), 1.5);
-        
+
         // Test negative result
         cpu.registers[1] = 1.0f32.to_bits();
         cpu.registers[2] = 2.0f32.to_bits();
         FSub.execute(&mut cpu, &mut memory);
         assert_eq!(f32::from_bits(cpu.registers[3]), -1.0);
-        
+
         // Test subtraction with infinity
         cpu.registers[1] = f32::INFINITY.to_bits();
         cpu.registers[2] = f32::INFINITY.to_bits();
@@ -305,29 +305,29 @@ mod tests {
     fn test_fcmp() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Setup registers for comparison
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         // Test equal values
         cpu.registers[1] = 1.0f32.to_bits();
         cpu.registers[2] = 1.0f32.to_bits();
         FCmp.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_COMPARE_MASK, CPU::CR0_FP_EQUAL);
-        
+
         // Test less than
         cpu.registers[1] = 0.5f32.to_bits();
         cpu.registers[2] = 1.0f32.to_bits();
         FCmp.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_COMPARE_MASK, CPU::CR0_FP_LESS);
-        
+
         // Test greater than
         cpu.registers[1] = 2.0f32.to_bits();
         cpu.registers[2] = 1.0f32.to_bits();
         FCmp.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_COMPARE_MASK, CPU::CR0_FP_GREATER);
-        
+
         // Test NaN
         cpu.registers[1] = f32::NAN.to_bits();
         cpu.registers[2] = 1.0f32.to_bits();
@@ -363,30 +363,30 @@ mod tests {
     fn test_fp_to_int() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         cpu.s1 = 1;
         cpu.d = 2;
-        
+
         // Test normal conversion
         cpu.registers[1] = 42.5f32.to_bits();
         FpToInt.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 42);
-        
+
         // Test negative number
         cpu.registers[1] = (-42.5f32).to_bits();
         FpToInt.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2] as i32, -42);
-        
+
         // Test overflow
         cpu.registers[1] = (2147483648.0f32).to_bits();
         FpToInt.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0x7FFFFFFF);
-        
+
         // Test underflow
         cpu.registers[1] = (-2147483904.0f32).to_bits();
         FpToInt.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0x80000000);
-        
+
         // Test NaN
         cpu.registers[1] = f32::NAN.to_bits();
         FpToInt.execute(&mut cpu, &mut memory);
@@ -398,16 +398,16 @@ mod tests {
     fn test_float_div_by_zero() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Set up division by zero
         cpu.registers[1] = f32::to_bits(1.0);
         cpu.registers[2] = f32::to_bits(0.0);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FDiv.execute(&mut cpu, &mut memory);
-        
+
         // Result should be infinity
         assert!(f32::from_bits(cpu.registers[3]).is_infinite());
     }
@@ -416,17 +416,17 @@ mod tests {
     fn test_float_invalid_operations() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test 0.0 / 0.0 (NaN)
         cpu.registers[1] = f32::to_bits(0.0);
         cpu.registers[2] = f32::to_bits(0.0);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FDiv.execute(&mut cpu, &mut memory);
         assert!(f32::from_bits(cpu.registers[3]).is_nan());
-        
+
         // Test infinity - infinity (NaN)
         cpu.registers[1] = f32::to_bits(f32::INFINITY);
         cpu.registers[2] = f32::to_bits(f32::INFINITY);
@@ -438,14 +438,14 @@ mod tests {
     fn test_float_overflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test multiplication leading to overflow
         cpu.registers[1] = f32::to_bits(f32::MAX);
         cpu.registers[2] = f32::to_bits(2.0);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FMul.execute(&mut cpu, &mut memory);
         assert!(f32::from_bits(cpu.registers[3]).is_infinite());
     }
@@ -454,16 +454,16 @@ mod tests {
     fn test_float_underflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test multiplication leading to underflow
         cpu.registers[1] = f32::to_bits(f32::MIN_POSITIVE);
         cpu.registers[2] = f32::to_bits(0.5);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FMul.execute(&mut cpu, &mut memory);
-        
+
         // Result should be denormalized or zero
         let result = f32::from_bits(cpu.registers[3]);
         assert!(result.is_subnormal() || result == 0.0);
@@ -473,15 +473,15 @@ mod tests {
     fn test_float_rounding_modes() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test rounding of 1.5 to integer
         cpu.registers[1] = f32::to_bits(1.5);
         cpu.d = 2;
         cpu.s1 = 1;
-        
+
         FpToInt.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[2], 2);  // Should round up
-        
+        assert_eq!(cpu.registers[2], 2); // Should round up
+
         // TODO: Add tests for other rounding modes when implemented
         // - Round toward zero
         // - Round toward +infinity
@@ -492,23 +492,23 @@ mod tests {
     fn test_float_compare_special_values() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test NaN comparisons
         cpu.registers[1] = f32::to_bits(f32::NAN);
         cpu.registers[2] = f32::to_bits(0.0);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FCmp.execute(&mut cpu, &mut memory);
         assert_ne!(cpu.cr0 & CPU::CR0_FP_UNORDERED, 0);
-        
+
         // Test infinity comparisons
         cpu.registers[1] = f32::to_bits(f32::INFINITY);
         cpu.registers[2] = f32::to_bits(f32::MAX);
         FCmp.execute(&mut cpu, &mut memory);
         assert_ne!(cpu.cr0 & CPU::CR0_FP_GREATER, 0);
-        
+
         // Test -infinity comparisons
         cpu.registers[1] = f32::to_bits(f32::NEG_INFINITY);
         cpu.registers[2] = f32::to_bits(-f32::MAX);
@@ -520,19 +520,19 @@ mod tests {
     fn test_float_denormal_handling() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Create a denormal number
-        let denormal = f32::from_bits(1);  // Smallest possible denormal
+        let denormal = f32::from_bits(1); // Smallest possible denormal
         cpu.registers[1] = f32::to_bits(denormal);
         cpu.registers[2] = f32::to_bits(2.0);
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         FMul.execute(&mut cpu, &mut memory);
-        
+
         // Result should still be denormal
         let result = f32::from_bits(cpu.registers[3]);
         assert!(result.is_subnormal());
     }
-} 
+}

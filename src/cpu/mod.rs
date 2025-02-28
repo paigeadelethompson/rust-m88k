@@ -1,5 +1,5 @@
 //! CPU module for the Motorola 88000 emulator.
-//! 
+//!
 //! This module implements the core CPU functionality including register management,
 //! control flags, and MMU support.
 
@@ -8,7 +8,7 @@ pub mod instructions;
 use instructions::system::PrivilegeLevel;
 
 /// CPU state for the Motorola 88000.
-/// 
+///
 /// Maintains the processor state including general purpose registers,
 /// program counter, control registers, and MMU state.
 #[derive(Debug, Default)]
@@ -60,7 +60,7 @@ impl CPU {
     pub const CR0_GREATER: u32 = 1 << 2;
     /// Condition code flag: Unordered Comparison
     pub const CR0_UNORDERED: u32 = 1 << 3;
-    
+
     /// Floating point flag: Division by Zero
     pub const CR0_FP_DIVZERO: u32 = 1 << 4;
     /// Floating point flag: Inexact Result
@@ -80,8 +80,9 @@ impl CPU {
     /// Floating point flag: Unordered Comparison
     pub const CR0_FP_UNORDERED: u32 = 1 << 12;
     /// Floating point comparison mask
-    pub const CR0_FP_COMPARE_MASK: u32 = Self::CR0_FP_EQUAL | Self::CR0_FP_LESS | Self::CR0_FP_GREATER | Self::CR0_FP_UNORDERED;
-    
+    pub const CR0_FP_COMPARE_MASK: u32 =
+        Self::CR0_FP_EQUAL | Self::CR0_FP_LESS | Self::CR0_FP_GREATER | Self::CR0_FP_UNORDERED;
+
     /// Exception flag: Bounds Check Violation
     pub const CR0_BOUNDS_CHECK: u32 = 1 << 13;
     /// Exception flag: Trap
@@ -104,9 +105,9 @@ impl CPU {
     pub const MMU_WRITE_PROTECT: u32 = 1 << 2;
 
     /// Creates a new CPU instance with default values.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new CPU instance with all registers and flags initialized to zero.
     pub fn new() -> Self {
         let mut cpu = Self::default();
@@ -115,18 +116,18 @@ impl CPU {
     }
 
     /// Sets a floating point flag in CR0.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `flag` - The flag(s) to set
     pub fn set_fp_flag(&mut self, flag: u32) {
         self.cr0 |= flag;
     }
 
     /// Clears a floating point flag in CR0.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `flag` - The flag(s) to clear
     pub fn clear_fp_flag(&mut self, flag: u32) {
         self.cr0 &= !flag;
@@ -168,18 +169,18 @@ impl CPU {
     }
 
     /// Checks if the MMU is enabled.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if the MMU is enabled, `false` otherwise.
     pub fn mmu_enabled(&self) -> bool {
         (self.mmu_control & Self::MMU_ENABLE) != 0
     }
 
     /// Sets the MMU enabled state.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `enabled` - Whether to enable or disable the MMU
     pub fn set_mmu_enabled(&mut self, enabled: bool) {
         if enabled {
@@ -208,16 +209,16 @@ mod tests {
     #[test]
     fn test_set_fp_flag() {
         let mut cpu = CPU::new();
-        
+
         // Test setting a single flag
         cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_OVERFLOW, CPU::CR0_FP_OVERFLOW);
-        
+
         // Test setting multiple flags
         cpu.set_fp_flag(CPU::CR0_FP_OVERFLOW | CPU::CR0_FP_INEXACT);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_OVERFLOW, CPU::CR0_FP_OVERFLOW);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_INEXACT, CPU::CR0_FP_INEXACT);
-        
+
         // Test clearing a flag
         cpu.clear_fp_flag(CPU::CR0_FP_OVERFLOW);
         assert_eq!(cpu.cr0 & CPU::CR0_FP_OVERFLOW, 0);
@@ -227,18 +228,18 @@ mod tests {
     #[test]
     fn test_mmu_control() {
         let mut cpu = CPU::new();
-        
+
         // Test MMU enable/disable
         assert!(!cpu.mmu_enabled());
         cpu.set_mmu_enabled(true);
         assert!(cpu.mmu_enabled());
         cpu.set_mmu_enabled(false);
         assert!(!cpu.mmu_enabled());
-        
+
         // Test MMU fault flags
         cpu.set_page_fault();
         assert_eq!(cpu.cr0 & CPU::CR0_PAGE_FAULT, CPU::CR0_PAGE_FAULT);
-        
+
         cpu.set_write_protect_fault();
         assert_eq!(cpu.cr0 & CPU::CR0_WRITE_PROTECT, CPU::CR0_WRITE_PROTECT);
     }
@@ -246,14 +247,14 @@ mod tests {
     #[test]
     fn test_privilege_level() {
         let mut cpu = CPU::new();
-        
+
         // Test initial privilege level
         assert_eq!(cpu.get_privilege_level(), PrivilegeLevel::User);
-        
+
         // Test switching to supervisor mode
         cpu.set_privilege_level(PrivilegeLevel::Supervisor);
         assert_eq!(cpu.get_privilege_level(), PrivilegeLevel::Supervisor);
-        
+
         // Test switching back to user mode
         cpu.set_privilege_level(PrivilegeLevel::User);
         assert_eq!(cpu.get_privilege_level(), PrivilegeLevel::User);
@@ -262,12 +263,12 @@ mod tests {
     #[test]
     fn test_privilege_violation() {
         let mut cpu = CPU::new();
-        
+
         // Test setting privilege violation
         assert!(!cpu.has_privilege_violation());
         cpu.set_privilege_violation();
         assert!(cpu.has_privilege_violation());
-        
+
         // Test clearing privilege violation
         cpu.clear_privilege_violation();
         assert!(!cpu.has_privilege_violation());
@@ -276,20 +277,20 @@ mod tests {
     #[test]
     fn test_error_handling() {
         let mut cpu = CPU::new();
-        
+
         // Test multiple error conditions
         cpu.set_page_fault();
         cpu.set_write_protect_fault();
         cpu.set_privilege_violation();
-        
+
         assert_ne!(cpu.cr0 & CPU::CR0_PAGE_FAULT, 0);
         assert_ne!(cpu.cr0 & CPU::CR0_WRITE_PROTECT, 0);
         assert_ne!(cpu.cr0 & CPU::CR0_PRIVILEGE_VIOLATION, 0);
-        
+
         // Test clearing individual errors
         cpu.clear_privilege_violation();
         assert_eq!(cpu.cr0 & CPU::CR0_PRIVILEGE_VIOLATION, 0);
         assert_ne!(cpu.cr0 & CPU::CR0_PAGE_FAULT, 0);
         assert_ne!(cpu.cr0 & CPU::CR0_WRITE_PROTECT, 0);
     }
-} 
+}

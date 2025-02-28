@@ -1,14 +1,14 @@
 //! Logical instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of all logical operations including:
 //! - Basic bitwise operations (AND, OR, XOR, NOT)
 //! - Immediate variants of logical operations
 //! - Bit field operations (extract, insert, rotate)
 //! - Bit manipulation operations (clear, set, test)
 
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::Memory;
-use crate::cpu::instructions::Instruction;
 
 /// AND instruction: rd = rs1 & rs2
 pub struct And;
@@ -144,7 +144,7 @@ pub struct ExtUHalf;
 
 impl Instruction for ExtUHalf {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
-        cpu.registers[cpu.d] = (cpu.registers[cpu.s1] & 0xFFFF) as u32;
+        cpu.registers[cpu.d] = cpu.registers[cpu.s1] & 0xFFFF;
     }
 }
 
@@ -153,7 +153,7 @@ pub struct ExtUByte;
 
 impl Instruction for ExtUByte {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
-        cpu.registers[cpu.d] = (cpu.registers[cpu.s1] & 0xFF) as u32;
+        cpu.registers[cpu.d] = cpu.registers[cpu.s1] & 0xFF;
     }
 }
 
@@ -182,8 +182,8 @@ pub struct MakN;
 
 impl Instruction for MakN {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
-        let n = cpu.registers[cpu.s2] & 0x1F;  // Get width (0-31)
-        let offset = (cpu.registers[cpu.s2] >> 5) & 0x1F;  // Get offset (0-31)
+        let n = cpu.registers[cpu.s2] & 0x1F; // Get width (0-31)
+        let offset = (cpu.registers[cpu.s2] >> 5) & 0x1F; // Get offset (0-31)
         let mask = if n == 0 { 0 } else { (1u32 << n) - 1 };
         let value = cpu.registers[cpu.s1] & mask;
         cpu.registers[cpu.d] = value << offset;
@@ -268,7 +268,7 @@ mod tests {
         // Test negative number
         cpu.registers[1] = 0x0000F234;
         ExtHalf.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[2] as i32, -3532);  // 0xFFFFF234
+        assert_eq!(cpu.registers[2] as i32, -3532); // 0xFFFFF234
     }
 
     #[test]
@@ -287,7 +287,7 @@ mod tests {
         // Test negative number
         cpu.registers[1] = 0x000000F2;
         ExtByte.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[2] as i32, -14);  // 0xFFFFFFF2
+        assert_eq!(cpu.registers[2] as i32, -14); // 0xFFFFFFF2
     }
 
     #[test]
@@ -296,8 +296,8 @@ mod tests {
         let mut memory = Memory::new();
 
         // Test making a 4-bit field at offset 8
-        cpu.registers[1] = 0x0000000F;  // Value
-        cpu.registers[2] = (8 << 5) | 4;  // offset=8, width=4
+        cpu.registers[1] = 0x0000000F; // Value
+        cpu.registers[2] = (8 << 5) | 4; // offset=8, width=4
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
@@ -306,16 +306,16 @@ mod tests {
         assert_eq!(cpu.registers[3], 0x00000F00);
 
         // Test with zero width
-        cpu.registers[2] = 0;  // offset=0, width=0
+        cpu.registers[2] = 0; // offset=0, width=0
         MakN.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
 
         // Test with maximum width
         cpu.registers[1] = 0xFFFFFFFF;
-        cpu.registers[2] = 31;  // offset=0, width=31
+        cpu.registers[2] = 31; // offset=0, width=31
         MakN.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0x7FFFFFFF);
     }
 
     // Add more tests following the same pattern...
-} 
+}

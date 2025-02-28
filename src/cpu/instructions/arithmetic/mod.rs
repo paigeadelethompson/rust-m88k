@@ -1,14 +1,14 @@
 //! Arithmetic instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of all arithmetic operations including:
 //! - Basic integer arithmetic (add, subtract, multiply, divide)
 //! - Immediate variants of arithmetic operations
 //! - Unsigned arithmetic operations
 //! - Special arithmetic operations (mask, find first one/zero)
 
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::Memory;
-use crate::cpu::instructions::Instruction;
 
 /// Add instruction: rd = rs1 + rs2
 pub struct Add;
@@ -182,7 +182,7 @@ impl Instruction for Cmp {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = cpu.registers[cpu.s1] as i32;
         let b = cpu.registers[cpu.s2] as i32;
-        
+
         // Set condition codes
         if a == b {
             cpu.cr0 |= CPU::CR0_EQUAL;
@@ -207,7 +207,7 @@ impl Instruction for CmpU {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = cpu.registers[cpu.s1];
         let b = cpu.registers[cpu.s2];
-        
+
         // Set condition codes
         if a == b {
             cpu.cr0 |= CPU::CR0_EQUAL;
@@ -233,7 +233,7 @@ impl Instruction for LMul {
         let a = cpu.registers[cpu.s1] as i32 as i64;
         let b = cpu.registers[cpu.s2] as i32 as i64;
         let result = a.wrapping_mul(b);
-        
+
         // Store high 32 bits in d, low 32 bits in d+1
         cpu.registers[cpu.d] = (result >> 32) as u32;
         cpu.registers[cpu.d.wrapping_add(1)] = result as u32;
@@ -248,7 +248,7 @@ impl Instruction for LMulU {
         let a = cpu.registers[cpu.s1] as u64;
         let b = cpu.registers[cpu.s2] as u64;
         let result = a.wrapping_mul(b);
-        
+
         // Store high 32 bits in d, low 32 bits in d+1
         cpu.registers[cpu.d] = (result >> 32) as u32;
         cpu.registers[cpu.d.wrapping_add(1)] = result as u32;
@@ -260,9 +260,10 @@ pub struct DivUD;
 
 impl Instruction for DivUD {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
-        let dividend = ((cpu.registers[cpu.s1] as u64) << 32) | cpu.registers[cpu.s1.wrapping_add(1)] as u64;
+        let dividend =
+            ((cpu.registers[cpu.s1] as u64) << 32) | cpu.registers[cpu.s1.wrapping_add(1)] as u64;
         let divisor = cpu.registers[cpu.s2];
-        
+
         if divisor == 0 {
             cpu.cr0 |= CPU::CR0_FP_DIVZERO;
             cpu.registers[cpu.d] = 0;
@@ -270,7 +271,7 @@ impl Instruction for DivUD {
         } else {
             let quotient = dividend / divisor as u64;
             let remainder = dividend % divisor as u64;
-            
+
             cpu.registers[cpu.d] = quotient as u32;
             cpu.registers[cpu.d.wrapping_add(1)] = remainder as u32;
         }
@@ -284,7 +285,7 @@ impl Instruction for Rem {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = cpu.registers[cpu.s1] as i32;
         let b = cpu.registers[cpu.s2] as i32;
-        
+
         if b == 0 {
             cpu.cr0 |= CPU::CR0_FP_DIVZERO;
             cpu.registers[cpu.d] = 0;
@@ -301,7 +302,7 @@ impl Instruction for RemU {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let a = cpu.registers[cpu.s1];
         let b = cpu.registers[cpu.s2];
-        
+
         if b == 0 {
             cpu.cr0 |= CPU::CR0_FP_DIVZERO;
             cpu.registers[cpu.d] = 0;
@@ -460,18 +461,18 @@ mod tests {
         let mut memory = Memory::new();
 
         // Test finding first 0 in various positions
-        cpu.registers[1] = 0xFFFFFFFE;  // First 0 at position 0
+        cpu.registers[1] = 0xFFFFFFFE; // First 0 at position 0
         cpu.d = 2;
         cpu.s1 = 1;
 
         FF0.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0);
 
-        cpu.registers[1] = 0xFFFFFEFF;  // First 0 at position 8
+        cpu.registers[1] = 0xFFFFFEFF; // First 0 at position 8
         FF0.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 8);
 
-        cpu.registers[1] = 0x7FFFFFFF;  // First 0 at position 31
+        cpu.registers[1] = 0x7FFFFFFF; // First 0 at position 31
         FF0.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 31);
 
@@ -487,18 +488,18 @@ mod tests {
         let mut memory = Memory::new();
 
         // Test finding first 1 in various positions
-        cpu.registers[1] = 0x00000001;  // First 1 at position 0
+        cpu.registers[1] = 0x00000001; // First 1 at position 0
         cpu.d = 2;
         cpu.s1 = 1;
 
         FF1.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0);
 
-        cpu.registers[1] = 0x00000100;  // First 1 at position 8
+        cpu.registers[1] = 0x00000100; // First 1 at position 8
         FF1.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 8);
 
-        cpu.registers[1] = 0x80000000;  // First 1 at position 31
+        cpu.registers[1] = 0x80000000; // First 1 at position 31
         FF1.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 31);
 
@@ -574,7 +575,7 @@ mod tests {
         cpu.s2 = 2;
 
         AddU.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0);  // Unsigned overflow wraps
+        assert_eq!(cpu.registers[3], 0); // Unsigned overflow wraps
     }
 
     #[test]
@@ -589,7 +590,7 @@ mod tests {
         cpu.s2 = 2;
 
         SubU.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xFFFFFFFF);  // Unsigned underflow wraps
+        assert_eq!(cpu.registers[3], 0xFFFFFFFF); // Unsigned underflow wraps
     }
 
     #[test]
@@ -642,7 +643,7 @@ mod tests {
         cpu.s2 = 2;
 
         LMul.execute(&mut cpu, &mut memory);
-        
+
         // Expected result: 0x12345678 * 0x11111111
         let expected = (0x12345678i64 * 0x11111111i64) as u64;
         let actual = ((cpu.registers[3] as u64) << 32) | cpu.registers[4] as u64;
@@ -664,19 +665,19 @@ mod tests {
         let mut memory = Memory::new();
 
         // Set up a 64-bit dividend
-        cpu.registers[1] = 0x00000000;  // High word
-        cpu.registers[2] = 0x00000064;  // Low word (100 in decimal)
-        cpu.registers[3] = 0x00000002;  // Divisor
+        cpu.registers[1] = 0x00000000; // High word
+        cpu.registers[2] = 0x00000064; // Low word (100 in decimal)
+        cpu.registers[3] = 0x00000002; // Divisor
         cpu.s1 = 1;
         cpu.s2 = 3;
         cpu.d = 4;
 
         DivUD.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[4], 50);     // Quotient
-        assert_eq!(cpu.registers[5], 0);      // Remainder
+        assert_eq!(cpu.registers[4], 50); // Quotient
+        assert_eq!(cpu.registers[5], 0); // Remainder
 
         // Test division by zero
-        cpu.registers[3] = 0;  // Divisor
+        cpu.registers[3] = 0; // Divisor
         cpu.cr0 = 0;
 
         DivUD.execute(&mut cpu, &mut memory);
@@ -751,42 +752,42 @@ mod tests {
     fn test_add_overflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test positive overflow
-        cpu.registers[1] = 0x7FFFFFFF;  // Max positive 32-bit int
+        cpu.registers[1] = 0x7FFFFFFF; // Max positive 32-bit int
         cpu.registers[2] = 1;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Add.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0x80000000);  // Should wrap to negative
-        
+        assert_eq!(cpu.registers[3], 0x80000000); // Should wrap to negative
+
         // Test negative overflow
-        cpu.registers[1] = 0x80000000;  // Min negative 32-bit int
-        cpu.registers[2] = 0xFFFFFFFF;  // -1 in two's complement
+        cpu.registers[1] = 0x80000000; // Min negative 32-bit int
+        cpu.registers[2] = 0xFFFFFFFF; // -1 in two's complement
         Add.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0x7FFFFFFF);  // Should wrap to positive
+        assert_eq!(cpu.registers[3], 0x7FFFFFFF); // Should wrap to positive
     }
 
     #[test]
     fn test_sub_underflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test positive to negative underflow
         cpu.registers[1] = 0;
         cpu.registers[2] = 1;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Sub.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xFFFFFFFF);  // -1 in two's complement
-        
+        assert_eq!(cpu.registers[3], 0xFFFFFFFF); // -1 in two's complement
+
         // Test negative to positive underflow
-        cpu.registers[1] = 0x80000000;  // Min negative 32-bit int
-        cpu.registers[2] = 0xFFFFFFFF;  // -1 in two's complement
+        cpu.registers[1] = 0x80000000; // Min negative 32-bit int
+        cpu.registers[2] = 0xFFFFFFFF; // -1 in two's complement
         Sub.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0x80000001);
     }
@@ -795,17 +796,17 @@ mod tests {
     fn test_div_by_zero() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test division by zero
         cpu.registers[1] = 42;
         cpu.registers[2] = 0;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Div.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
-        
+
         // Test unsigned division by zero
         DivU.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
@@ -815,55 +816,55 @@ mod tests {
     fn test_div_overflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test division overflow (MIN_INT / -1)
-        cpu.registers[1] = 0x80000000;  // Min negative 32-bit int
-        cpu.registers[2] = 0xFFFFFFFF;  // -1 in two's complement
+        cpu.registers[1] = 0x80000000; // Min negative 32-bit int
+        cpu.registers[2] = 0xFFFFFFFF; // -1 in two's complement
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Div.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0x80000000);  // Should remain MIN_INT
+        assert_eq!(cpu.registers[3], 0x80000000); // Should remain MIN_INT
     }
 
     #[test]
     fn test_mul_overflow() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test multiplication overflow
-        cpu.registers[1] = 0x7FFFFFFF;  // Max positive 32-bit int
+        cpu.registers[1] = 0x7FFFFFFF; // Max positive 32-bit int
         cpu.registers[2] = 2;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Mul.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xFFFFFFFE);  // Wrapped result
-        
+        assert_eq!(cpu.registers[3], 0xFFFFFFFE); // Wrapped result
+
         // Test negative multiplication overflow
-        cpu.registers[1] = 0x80000000;  // Min negative 32-bit int
+        cpu.registers[1] = 0x80000000; // Min negative 32-bit int
         cpu.registers[2] = 2;
         Mul.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0);  // Wrapped result
+        assert_eq!(cpu.registers[3], 0); // Wrapped result
     }
 
     #[test]
     fn test_rem_by_zero() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test remainder by zero
         cpu.registers[1] = 42;
         cpu.registers[2] = 0;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Rem.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
-        
+
         // Test unsigned remainder by zero
         RemU.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
@@ -873,87 +874,87 @@ mod tests {
     fn test_addu_wraparound() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test unsigned addition wraparound
         cpu.registers[1] = 0xFFFFFFFF;
         cpu.registers[2] = 1;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         AddU.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0);  // Should wrap to 0
+        assert_eq!(cpu.registers[3], 0); // Should wrap to 0
     }
 
     #[test]
     fn test_subu_wraparound() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test unsigned subtraction wraparound
         cpu.registers[1] = 0;
         cpu.registers[2] = 1;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         SubU.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xFFFFFFFF);  // Should wrap to max unsigned
+        assert_eq!(cpu.registers[3], 0xFFFFFFFF); // Should wrap to max unsigned
     }
 
     #[test]
     fn test_mul_boundary_cases() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test multiplication by 0
         cpu.registers[1] = 0xFFFFFFFF;
         cpu.registers[2] = 0;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Mul.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
-        
+
         // Test multiplication by 1
         cpu.registers[1] = 0x12345678;
         cpu.registers[2] = 1;
         Mul.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0x12345678);
-        
+
         // Test multiplication by -1
         cpu.registers[1] = 0x12345678;
-        cpu.registers[2] = 0xFFFFFFFF;  // -1 in two's complement
+        cpu.registers[2] = 0xFFFFFFFF; // -1 in two's complement
         Mul.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xEDCBA988);  // Negated value
+        assert_eq!(cpu.registers[3], 0xEDCBA988); // Negated value
     }
 
     #[test]
     fn test_div_boundary_cases() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         // Test division by 1
         cpu.registers[1] = 0x12345678;
         cpu.registers[2] = 1;
         cpu.d = 3;
         cpu.s1 = 1;
         cpu.s2 = 2;
-        
+
         Div.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0x12345678);
-        
+
         // Test division by -1 (normal case)
         cpu.registers[1] = 0x12345678;
-        cpu.registers[2] = 0xFFFFFFFF;  // -1 in two's complement
+        cpu.registers[2] = 0xFFFFFFFF; // -1 in two's complement
         Div.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.registers[3], 0xEDCBA988);  // Negated value
-        
+        assert_eq!(cpu.registers[3], 0xEDCBA988); // Negated value
+
         // Test 0 divided by any number
         cpu.registers[1] = 0;
         cpu.registers[2] = 0x12345678;
         Div.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[3], 0);
     }
-} 
+}

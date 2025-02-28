@@ -1,5 +1,5 @@
 //! Memory management module for the Motorola 88000 emulator.
-//! 
+//!
 //! This module implements memory access and management, including:
 //! - Physical memory access
 //! - Virtual memory translation
@@ -35,9 +35,15 @@ impl PageTableEntry {
 
     pub fn to_u32(&self) -> u32 {
         let mut value = self.physical_page & 0xFFFFF000;
-        if self.valid { value |= 1 << 0; }
-        if self.writable { value |= 1 << 1; }
-        if self.supervisor { value |= 1 << 2; }
+        if self.valid {
+            value |= 1 << 0;
+        }
+        if self.writable {
+            value |= 1 << 1;
+        }
+        if self.supervisor {
+            value |= 1 << 2;
+        }
         value
     }
 
@@ -179,7 +185,7 @@ mod tests {
     #[test]
     fn test_memory_access() {
         let mut memory = Memory::new();
-        
+
         // Test byte access
         memory.write_byte(0x1000, 0x42).unwrap();
         assert_eq!(memory.read_byte(0x1000).unwrap(), 0x42);
@@ -221,4 +227,4 @@ mod tests {
             Err(MemoryError::PageFault(_))
         ));
     }
-} 
+}

@@ -1,5 +1,5 @@
 //! Control flow instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of all control flow operations including:
 //! - Conditional branches
 //! - Jump instructions
@@ -7,9 +7,9 @@
 //! - Exception handling
 //! - Trap instructions
 
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::Memory;
-use crate::cpu::instructions::Instruction;
 
 /// Branch if equal instruction: if rs1 == rs2 then PC += offset
 pub struct Beq;
@@ -165,7 +165,7 @@ mod tests {
         cpu.pc = 1000;
 
         Beq.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 10;
@@ -173,7 +173,7 @@ mod tests {
         cpu.pc = 1000;
 
         Beq.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -190,7 +190,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bne.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 10;
@@ -198,7 +198,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bne.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -215,7 +215,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bgt.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 10;
@@ -223,7 +223,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bgt.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -240,7 +240,7 @@ mod tests {
         cpu.pc = 1000;
 
         Blt.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 20;
@@ -248,7 +248,7 @@ mod tests {
         cpu.pc = 1000;
 
         Blt.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -265,7 +265,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bge.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch taken (equal)
         cpu.registers[1] = 10;
@@ -273,7 +273,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bge.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 10;
@@ -281,7 +281,7 @@ mod tests {
         cpu.pc = 1000;
 
         Bge.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -298,7 +298,7 @@ mod tests {
         cpu.pc = 1000;
 
         Ble.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch taken (equal)
         cpu.registers[1] = 10;
@@ -306,7 +306,7 @@ mod tests {
         cpu.pc = 1000;
 
         Ble.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1100);  // PC + offset
+        assert_eq!(cpu.pc, 1100); // PC + offset
 
         // Test branch not taken
         cpu.registers[1] = 20;
@@ -314,7 +314,7 @@ mod tests {
         cpu.pc = 1000;
 
         Ble.execute(&mut cpu, &mut memory);
-        assert_eq!(cpu.pc, 1000);  // PC unchanged
+        assert_eq!(cpu.pc, 1000); // PC unchanged
     }
 
     #[test]
@@ -340,7 +340,7 @@ mod tests {
 
         Jal.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.pc, 0x1000);
-        assert_eq!(cpu.registers[1], 0x504);  // PC + 4
+        assert_eq!(cpu.registers[1], 0x504); // PC + 4
     }
 
     #[test]
@@ -417,4 +417,4 @@ mod tests {
         assert_ne!(cpu.cr0 & CPU::CR0_TRAP, 0);
         assert_eq!(cpu.trap_vector, 5);
     }
-} 
+}

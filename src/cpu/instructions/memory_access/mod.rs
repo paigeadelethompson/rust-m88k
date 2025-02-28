@@ -1,14 +1,14 @@
 //! Memory access instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of all memory access operations including:
 //! - Load and store operations
 //! - Different data size variants (byte, half-word, word, double)
 //! - Atomic memory operations
 //! - Memory access with MMU support
 
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::{Memory, MemoryError};
-use crate::cpu::instructions::Instruction;
 
 /// Load instruction: rd = Memory[rs1 + offset]
 #[derive(Debug)]
@@ -87,22 +87,22 @@ impl Instruction for LoadHalf {
     fn execute(&self, cpu: &mut CPU, memory: &mut Memory) {
         let addr = cpu.registers[cpu.s1].wrapping_add(cpu.offset as u32);
         let mut value = 0u16;
-        
+
         for i in 0..2 {
             match memory.read_byte(addr + i) {
                 Ok(byte) => value = (value << 8) | byte as u16,
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
-        
+
         cpu.registers[cpu.d] = value as u32;
     }
 }
@@ -114,18 +114,18 @@ impl Instruction for StoreHalf {
     fn execute(&self, cpu: &mut CPU, memory: &mut Memory) {
         let addr = cpu.registers[cpu.s1].wrapping_add(cpu.offset as u32);
         let value = cpu.registers[cpu.d] as u16;
-        
+
         for i in 0..2 {
             match memory.write_byte(addr + i, ((value >> ((1 - i) * 8)) & 0xFF) as u8) {
                 Ok(_) => (),
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
@@ -139,22 +139,22 @@ impl Instruction for LoadDouble {
     fn execute(&self, cpu: &mut CPU, memory: &mut Memory) {
         let addr = cpu.registers[cpu.s1].wrapping_add(cpu.offset as u32);
         let mut value = 0u64;
-        
+
         for i in 0..8 {
             match memory.read_byte(addr + i) {
                 Ok(byte) => value = (value << 8) | byte as u64,
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
-        
+
         // Store in consecutive registers
         cpu.registers[cpu.d] = (value >> 32) as u32;
         cpu.registers[cpu.d + 1] = value as u32;
@@ -168,18 +168,18 @@ impl Instruction for StoreDouble {
     fn execute(&self, cpu: &mut CPU, memory: &mut Memory) {
         let addr = cpu.registers[cpu.s1].wrapping_add(cpu.offset as u32);
         let value = ((cpu.registers[cpu.d] as u64) << 32) | (cpu.registers[cpu.d + 1] as u64);
-        
+
         for i in 0..8 {
             match memory.write_byte(addr + i, ((value >> ((7 - i) * 8)) & 0xFF) as u8) {
                 Ok(_) => (),
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
@@ -193,7 +193,7 @@ impl Instruction for Exchange {
     fn execute(&self, cpu: &mut CPU, memory: &mut Memory) {
         let addr = cpu.registers[cpu.s1].wrapping_add(cpu.offset as u32);
         let mut old_value = 0u32;
-        
+
         // Read old value
         for i in 0..4 {
             match memory.read_byte(addr + i) {
@@ -201,15 +201,15 @@ impl Instruction for Exchange {
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
-        
+
         // Write new value
         let new_value = cpu.registers[cpu.d];
         for i in 0..4 {
@@ -218,15 +218,15 @@ impl Instruction for Exchange {
                 Err(MemoryError::PageFault(_)) => {
                     cpu.set_page_fault();
                     return;
-                },
+                }
                 Err(MemoryError::WriteProtection(_)) => {
                     cpu.set_write_protect_fault();
                     return;
-                },
+                }
                 _ => return,
             }
         }
-        
+
         // Store old value
         cpu.registers[cpu.d] = old_value;
     }
@@ -296,17 +296,17 @@ mod tests {
     fn test_load_byte() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let value: u8 = 0x42;
-        
+
         memory.write_byte(addr, value).unwrap();
-        
+
         cpu.registers[1] = addr;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         LoadByte.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], value as u32);
     }
@@ -315,16 +315,16 @@ mod tests {
     fn test_store_byte() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let value: u8 = 0x42;
-        
+
         cpu.registers[1] = addr;
         cpu.registers[2] = value as u32;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         StoreByte.execute(&mut cpu, &mut memory);
         assert_eq!(memory.read_byte(addr).unwrap(), value);
     }
@@ -333,18 +333,18 @@ mod tests {
     fn test_load_half() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let value = 0x1234;
-        
+
         memory.write_byte(addr, (value >> 8) as u8).unwrap();
         memory.write_byte(addr + 1, value as u8).unwrap();
-        
+
         cpu.registers[1] = addr;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         LoadHalf.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], value as u32);
     }
@@ -353,18 +353,18 @@ mod tests {
     fn test_store_half() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let value = 0x1234;
-        
+
         cpu.registers[1] = addr;
         cpu.registers[2] = value;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         StoreHalf.execute(&mut cpu, &mut memory);
-        
+
         assert_eq!(memory.read_byte(addr).unwrap(), (value >> 8) as u8);
         assert_eq!(memory.read_byte(addr + 1).unwrap(), value as u8);
     }
@@ -373,21 +373,23 @@ mod tests {
     fn test_load_double() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let test_value: u64 = 0x1234567890ABCDEF;
-        
+
         for i in 0..8 {
-            memory.write_byte(addr + i, ((test_value >> ((7 - i) * 8)) & 0xFF) as u8).unwrap();
+            memory
+                .write_byte(addr + i, ((test_value >> ((7 - i) * 8)) & 0xFF) as u8)
+                .unwrap();
         }
-        
+
         cpu.registers[1] = addr;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         LoadDouble.execute(&mut cpu, &mut memory);
-        
+
         let result = ((cpu.registers[2] as u64) << 32) | (cpu.registers[3] as u64);
         assert_eq!(result, test_value);
     }
@@ -396,19 +398,19 @@ mod tests {
     fn test_store_double() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let test_value: u64 = 0x1234567890ABCDEF;
-        
+
         cpu.registers[1] = addr;
         cpu.registers[2] = (test_value >> 32) as u32;
         cpu.registers[3] = test_value as u32;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         StoreDouble.execute(&mut cpu, &mut memory);
-        
+
         for i in 0..8 {
             let expected = ((test_value >> ((7 - i) * 8)) & 0xFF) as u8;
             assert_eq!(memory.read_byte(addr + i).unwrap(), expected);
@@ -419,27 +421,29 @@ mod tests {
     fn test_exchange() {
         let mut cpu = CPU::new();
         let mut memory = Memory::new();
-        
+
         let addr = 0x1000;
         let initial_value = 0x12345678;
         let new_value = 0x90ABCDEF;
-        
+
         // Set up initial memory value
         for i in 0..4 {
-            memory.write_byte(addr + i, ((initial_value >> ((3 - i) * 8)) & 0xFF) as u8).unwrap();
+            memory
+                .write_byte(addr + i, ((initial_value >> ((3 - i) * 8)) & 0xFF) as u8)
+                .unwrap();
         }
-        
+
         cpu.registers[1] = addr;
         cpu.registers[2] = new_value;
         cpu.s1 = 1;
         cpu.d = 2;
         cpu.offset = 0;
-        
+
         Exchange.execute(&mut cpu, &mut memory);
-        
+
         // Check that the old value was stored in the register
         assert_eq!(cpu.registers[2], initial_value);
-        
+
         // Check that the new value was stored in memory
         let mut mem_value = 0u32;
         for i in 0..4 {
@@ -464,4 +468,4 @@ mod tests {
 
         assert!(cpu.cr0 & CPU::CR0_PAGE_FAULT != 0);
     }
-} 
+}

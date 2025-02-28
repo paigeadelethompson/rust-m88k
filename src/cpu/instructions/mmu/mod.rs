@@ -1,12 +1,12 @@
 //! MMU instruction implementations for the Motorola 88000.
-//! 
+//!
 //! This module contains implementations of Memory Management Unit (MMU) instructions,
 //! including page table management and address translation operations.
 
+use crate::cpu::instructions::system::PrivilegeLevel;
+use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 use crate::memory::Memory;
-use crate::cpu::instructions::Instruction;
-use crate::cpu::instructions::system::PrivilegeLevel;
 
 /// Load Page Table Base Register instruction
 #[derive(Debug)]
@@ -122,4 +122,4 @@ mod tests {
         translate.execute(&mut cpu, &mut memory);
         assert!(cpu.cr0 & CPU::CR0_PAGE_FAULT != 0);
     }
-} 
+}
