@@ -1,0 +1,16 @@
+[package]
+name = "rust88"
+version = "0.1.0"
+edition = "2021"
+description = "A Motorola 88000 CPU emulator written in Rust"
+authors = ["Your Name <your.email@example.com>"]
+
+[lib]
+name = "rust88"
+path = "src/lib.rs"
+
+[dependencies]
+# We'll add more dependencies as needed
+
+[dev-dependencies]
+# Test dependencies will go here 
