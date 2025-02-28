@@ -65,7 +65,7 @@ impl Instruction for LoadByte {
     }
 }
 
-/// Store byte instruction: Memory[rs1 + offset] = rd[7:0]
+/// Store byte instruction: Memory\[rs1 + offset\] = rd\[7:0\]
 pub struct StoreByte;
 
 impl Instruction for StoreByte {
@@ -107,7 +107,7 @@ impl Instruction for LoadHalf {
     }
 }
 
-/// Store half-word instruction: Memory[rs1 + offset] = rd[15:0]
+/// Store half-word instruction: Memory\[rs1 + offset\] = rd\[15:0\]
 pub struct StoreHalf;
 
 impl Instruction for StoreHalf {

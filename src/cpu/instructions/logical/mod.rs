@@ -139,38 +139,38 @@ impl Instruction for Rot {
     }
 }
 
-/// Extract unsigned halfword instruction: rd = rs1[15:0]
-pub struct ExtUHalf;
+/// Extract unsigned halfword instruction: rd = rs1\[15:0\]
+pub struct ExtractUHalf;
 
-impl Instruction for ExtUHalf {
+impl Instruction for ExtractUHalf {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         cpu.registers[cpu.d] = cpu.registers[cpu.s1] & 0xFFFF;
     }
 }
 
-/// Extract unsigned byte instruction: rd = rs1[7:0]
-pub struct ExtUByte;
+/// Extract unsigned byte instruction: rd = rs1\[7:0\]
+pub struct ExtractUByte;
 
-impl Instruction for ExtUByte {
+impl Instruction for ExtractUByte {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         cpu.registers[cpu.d] = cpu.registers[cpu.s1] & 0xFF;
     }
 }
 
-/// Extract halfword instruction (sign-extended): rd = SignExtend(rs1[15:0])
-pub struct ExtHalf;
+/// Extract halfword instruction (sign-extended): rd = SignExtend(rs1\[15:0\])
+pub struct ExtractHalf;
 
-impl Instruction for ExtHalf {
+impl Instruction for ExtractHalf {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let value = (cpu.registers[cpu.s1] & 0xFFFF) as i16;
         cpu.registers[cpu.d] = value as i32 as u32;
     }
 }
 
-/// Extract byte instruction (sign-extended): rd = SignExtend(rs1[7:0])
-pub struct ExtByte;
+/// Extract byte instruction (sign-extended): rd = SignExtend(rs1\[7:0\])
+pub struct ExtractByte;
 
-impl Instruction for ExtByte {
+impl Instruction for ExtractByte {
     fn execute(&self, cpu: &mut CPU, _memory: &mut Memory) {
         let value = (cpu.registers[cpu.s1] & 0xFF) as i8;
         cpu.registers[cpu.d] = value as i32 as u32;
@@ -235,7 +235,7 @@ mod tests {
         cpu.d = 2;
         cpu.s1 = 1;
 
-        ExtUHalf.execute(&mut cpu, &mut memory);
+        ExtractUHalf.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0x1234);
     }
 
@@ -248,7 +248,7 @@ mod tests {
         cpu.d = 2;
         cpu.s1 = 1;
 
-        ExtUByte.execute(&mut cpu, &mut memory);
+        ExtractUByte.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2], 0x12);
     }
 
@@ -262,12 +262,12 @@ mod tests {
         cpu.d = 2;
         cpu.s1 = 1;
 
-        ExtHalf.execute(&mut cpu, &mut memory);
+        ExtractHalf.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2] as i32, 0x1234);
 
         // Test negative number
         cpu.registers[1] = 0x0000F234;
-        ExtHalf.execute(&mut cpu, &mut memory);
+        ExtractHalf.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2] as i32, -3532); // 0xFFFFF234
     }
 
@@ -281,12 +281,12 @@ mod tests {
         cpu.d = 2;
         cpu.s1 = 1;
 
-        ExtByte.execute(&mut cpu, &mut memory);
+        ExtractByte.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2] as i32, 0x12);
 
         // Test negative number
         cpu.registers[1] = 0x000000F2;
-        ExtByte.execute(&mut cpu, &mut memory);
+        ExtractByte.execute(&mut cpu, &mut memory);
         assert_eq!(cpu.registers[2] as i32, -14); // 0xFFFFFFF2
     }
 
