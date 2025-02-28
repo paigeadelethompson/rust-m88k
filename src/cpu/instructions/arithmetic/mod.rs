@@ -184,18 +184,22 @@ impl Instruction for Cmp {
         let b = cpu.registers[cpu.s2] as i32;
 
         // Set condition codes
-        if a == b {
-            cpu.cr0 |= CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_LESS;
-            cpu.cr0 &= !CPU::CR0_GREATER;
-        } else if a < b {
-            cpu.cr0 |= CPU::CR0_LESS;
-            cpu.cr0 &= !CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_GREATER;
-        } else {
-            cpu.cr0 |= CPU::CR0_GREATER;
-            cpu.cr0 &= !CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_LESS;
+        match a.cmp(&b) {
+            std::cmp::Ordering::Equal => {
+                cpu.cr0 |= CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_LESS;
+                cpu.cr0 &= !CPU::CR0_GREATER;
+            }
+            std::cmp::Ordering::Less => {
+                cpu.cr0 |= CPU::CR0_LESS;
+                cpu.cr0 &= !CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_GREATER;
+            }
+            std::cmp::Ordering::Greater => {
+                cpu.cr0 |= CPU::CR0_GREATER;
+                cpu.cr0 &= !CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_LESS;
+            }
         }
     }
 }
@@ -209,18 +213,22 @@ impl Instruction for CmpU {
         let b = cpu.registers[cpu.s2];
 
         // Set condition codes
-        if a == b {
-            cpu.cr0 |= CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_LESS;
-            cpu.cr0 &= !CPU::CR0_GREATER;
-        } else if a < b {
-            cpu.cr0 |= CPU::CR0_LESS;
-            cpu.cr0 &= !CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_GREATER;
-        } else {
-            cpu.cr0 |= CPU::CR0_GREATER;
-            cpu.cr0 &= !CPU::CR0_EQUAL;
-            cpu.cr0 &= !CPU::CR0_LESS;
+        match a.cmp(&b) {
+            std::cmp::Ordering::Equal => {
+                cpu.cr0 |= CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_LESS;
+                cpu.cr0 &= !CPU::CR0_GREATER;
+            }
+            std::cmp::Ordering::Less => {
+                cpu.cr0 |= CPU::CR0_LESS;
+                cpu.cr0 &= !CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_GREATER;
+            }
+            std::cmp::Ordering::Greater => {
+                cpu.cr0 |= CPU::CR0_GREATER;
+                cpu.cr0 &= !CPU::CR0_EQUAL;
+                cpu.cr0 &= !CPU::CR0_LESS;
+            }
         }
     }
 }

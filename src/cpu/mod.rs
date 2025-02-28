@@ -110,9 +110,10 @@ impl CPU {
     ///
     /// A new CPU instance with all registers and flags initialized to zero.
     pub fn new() -> Self {
-        let mut cpu = Self::default();
-        cpu.privilege_level = PrivilegeLevel::User;
-        cpu
+        Self {
+            privilege_level: PrivilegeLevel::User,
+            ..Default::default()
+        }
     }
 
     /// Sets a floating point flag in CR0.
